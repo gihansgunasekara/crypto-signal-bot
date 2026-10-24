@@ -1,0 +1,35 @@
+name: Crypto Signal Bot 24/7
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # සෑම විනාඩි 15කටම වරක් ස්වයංක්‍රීයව ක්‍රියාත්මක වේ
+  workflow_dispatch:        # අපිට ඕන වෙලාවක අතින් Run කරලා බැලීමට
+
+permissions:
+  contents: write
+
+jobs:
+  scan_market:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install ccxt pandas ta requests
+
+      - name: Run Signal Bot
+        run: python futures_bot.py
+
+      - name: Save Active Trades State
+        run: |
+          git config --global user.name "SignalBot"
+          git config --global user.email "bot@github.com"
+          git add active_trades.json || true
+          git diff --staged --quiet || git commit -m "Update active trades"
+          git push || true
